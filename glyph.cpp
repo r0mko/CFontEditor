@@ -3,14 +3,15 @@
 #include <QDebug>
 #include <QFontMetrics>
 #include <QPainter>
+#include <QRawFont>
 #include <QTextCodec>
-
-
 
 Glyph::Glyph(QQuickItem *parent)
     : QQuickPaintedItem(parent)
 {
     m_color = QColor(Qt::black);
+    setAntialiasing(false);
+    setSmooth(false);
     m_backgroundColor = QColor(Qt::transparent);
 }
 
@@ -32,14 +33,14 @@ FontSelector *Glyph::fontSelector() const
 
 void Glyph::setFontSelector(FontSelector *fontSelector)
 {
-    
+
     if (m_fontSelector == fontSelector)
         return;
-    
+
     if (m_fontSelector) {
         disconnect(m_fontSelector, nullptr, this, nullptr);
     }
-    
+
     m_fontSelector = fontSelector;
     connect(m_fontSelector, &FontSelector::pointSizeChanged, this, &Glyph::fix);
     connect(m_fontSelector, &FontSelector::currentFontChanged, this, &Glyph::fix);
@@ -78,7 +79,7 @@ void Glyph::setColor(QColor color)
 {
     if (m_color == color)
         return;
-    
+
     m_color = color;
     emit colorChanged();
     update();
@@ -113,7 +114,7 @@ void Glyph::setBackgroundColor(QColor backgroundColor)
 {
     if (m_backgroundColor == backgroundColor)
         return;
-    
+
     m_backgroundColor = backgroundColor;
     emit backgroundColorChanged();
 }
@@ -138,25 +139,26 @@ void Glyph::fix()
     }
     QRect rect = metrics.boundingRect(m_glyph);
     m_baseline = -rect.top();
-    int width = rect.width(); //metrics.width(m_glyph) + metrics.leftBearing(m_glyph[0]) + metrics.rightBearing(m_glyph[0]);
+    int width = rect.width();
     setImplicitWidth(width);
     setImplicitHeight(metrics.height());
-//    setWidth(width);
-//    setHeight(metrics.height());
     if (width <= 0 || rect.height() <= 0)
         return;
     QSize size(width, metrics.height());
-    QImage img(size, QImage::Format_ARGB32_Premultiplied);
+    QImage img(size, QImage::Format_ARGB32);
     if (size != m_size) {
         m_size = size;
         emit sizeChanged();
     }
     img.fill(m_backgroundColor);
     QPainter painter(&img);
-    
-    painter.setPen(m_color);
-    painter.setFont(m_fontSelector->currentFont());
-    painter.drawText(0, m_baseline, m_glyph);
+    qDebug() << "Font style strategy" << m_fontSelector->currentFont().styleStrategy();
+    QRawFont rf = QRawFont::fromFont(m_fontSelector->currentFont());
+    auto glyphs = rf.glyphIndexesForString(m_glyph);
+    QPainterPath p = rf.pathForGlyph(glyphs.first());
+    painter.setRenderHints(QPainter::Antialiasing | QPainter::HighQualityAntialiasing, m_fontSelector->antialiased());
+    painter.translate(0, m_baseline);
+    painter.fillPath(p, QBrush(m_color));
     m_image = img;
     update();
 }

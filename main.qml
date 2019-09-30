@@ -9,15 +9,16 @@ ApplicationWindow {
     width: 1200
     height: 960
     title: qsTr("CFont editor")
-    
+
     FontSelector {
         id: _selector
         fontIndex: _fontCbox.currentIndex
         encoding: _encodingBox.currentText
         pointSize: _sizeSpinner.value
         bold: _bold.checked
+        antialiased: _antialiasing.checked
     }
-    
+
     header: ToolBar {
         id: _toolbar
         RowLayout {
@@ -33,17 +34,23 @@ ApplicationWindow {
                     focus = false
                 }
             }
-            
+
             ToolButton {
                 id: _bold
                 text: "Bold"
                 checkable: true
             }
-            
+
+            ToolButton {
+                id: _antialiasing
+                text: "AA"
+                checkable: true
+            }
+
             Label {
                 text: "Encoding:"
             }
-            
+
             ComboBox {
                 id: _encodingBox
                 model: _selector.encodings
@@ -55,7 +62,7 @@ ApplicationWindow {
             Label {
                 text: "Pixel size:"
             }
-            
+
             SpinBox {
                 id: _sizeSpinner
                 Component.onCompleted: {
@@ -64,10 +71,10 @@ ApplicationWindow {
             }
         }
     }
-    
+
     RowLayout {
         anchors.fill: parent
-        
+
         //        ColumnLayout {
         //            id: zoomView
         //            Layout.minimumWidth: glyphGrid.currentItem.glyph.width * 10
@@ -77,7 +84,7 @@ ApplicationWindow {
         //                charCode: glyphGrid.currentItem.glyph.charCode
         //            }
         //        }
-        
+
         GridLayout {
             id: glyphGrid
             Layout.fillWidth: true
@@ -87,28 +94,29 @@ ApplicationWindow {
             rowSpacing: 2
             columns: 16
             rows: 16
-            
+
             Repeater {
                 model: 255 - 32
                 delegate: Rectangle {
+                    clip: true
                     implicitHeight: Math.max(_selector.fontHeight + 22, 60)
-                    implicitWidth: Math.max(_selector.fontWidth + 8, 40)
-                    
+                    implicitWidth: Math.max(_selector.fontWidth + 8, 48)
+
                     property bool isCurrent: GridView.isCurrentItem
                     property alias glyph: _glyph
                     color: "#ddd"
                     border.width: isCurrent ? 4 : 1
                     border.color: isCurrent ? "#0FF" : "#000"
-                    
-                    
+
+
                     Text {
                         id: _heading
                         text: _glyph.glyph + " (" + _glyph.charCode + ")"
                         width: parent.width
                         horizontalAlignment: Qt.AlignHCenter
-                        font.pointSize: 10
+                        font.pointSize: 8
                     }
-                    
+
                     Rectangle {
                         width: _selector.fontWidth + 4
                         height: _selector.fontHeight + 4
@@ -127,24 +135,24 @@ ApplicationWindow {
                             backgroundColor: "#333"
                         }
                     }
-                    
+
                     //                    MouseArea {
                     //                        anchors.fill: parent
                     //                        enabled: true
                     //                        onClicked: {
-                    //                            console.log("Clicked", glyphGrid.currentIndex, index)   
+                    //                            console.log("Clicked", glyphGrid.currentIndex, index)
                     //                            glyphGrid.currentIndex = index
                     //                        }
                     //                    }
                 }
-                
+
             }
-            
-            
-            
-            
+
+
+
+
         }
-        
-        
+
+
     }
 }

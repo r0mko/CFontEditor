@@ -8,9 +8,29 @@ QRect FontSelector::fontRect() const
     return m_fontRect;
 }
 
+bool FontSelector::antialiased() const
+{
+    return m_antialiased;
+}
+
+void FontSelector::setAntialiased(bool antialiased)
+{
+    if (m_antialiased == antialiased)
+        return;
+
+    m_antialiased = antialiased;
+    if (!m_antialiased) {
+        m_currentFont.setStyleStrategy(QFont::NoAntialias);
+    } else {
+        m_currentFont.setStyleStrategy(QFont::PreferAntialias);
+    }
+    emit antialiasedChanged();
+    emit currentFontChanged();
+}
+
 FontSelector::FontSelector(QObject *parent) : QObject(parent)
 {
-    
+
 }
 
 QStringList FontSelector::fonts() const
@@ -32,15 +52,17 @@ void FontSelector::setFontIndex(int fontIndex)
 {
     if (m_fontIndex == fontIndex)
         return;
-    
+
     m_fontIndex = fontIndex;
     if (m_fontIndex >=0 && m_fontIndex < fonts().size()) {
         m_currentFont = QFont(fonts()[m_fontIndex], m_pointSize);
         m_currentFont.setBold(m_bold);
-//        m_currentFont.setStyleStrategy(QFont::NoAntialias);
+        if (!m_antialiased) {
+            m_currentFont.setStyleStrategy(QFont::NoAntialias);
+        }
         qDebug() << "Set current font" << m_currentFont.family() << "size:" << m_pointSize;
     }
-    
+
     calculateBoundingBox();
     emit currentFontChanged();
     emit fontIndexChanged();
@@ -56,7 +78,7 @@ void FontSelector::setWritingSystem(WritingSystem writingSystem)
 {
     if (m_writingSystem == writingSystem)
         return;
-    
+
     m_writingSystem = writingSystem;
     m_fontIndex = 0;
     calculateBoundingBox();
@@ -90,7 +112,7 @@ QStringList FontSelector::encodings() const
         }
     }
     return ret;
-    
+
 }
 
 QString FontSelector::encoding() const
@@ -117,14 +139,14 @@ void FontSelector::setBold(bool bold)
 {
     if (m_bold == bold)
         return;
-    
+
     m_currentFont.setBold(bold);
     emit currentFontChanged();
     m_bold = bold;
     emit boldChanged();
 }
 
-void FontSelector::calculateBoundingBox() 
+void FontSelector::calculateBoundingBox()
 {
     m_fontRect = QRect();
     if (m_encoding.isEmpty()) {
@@ -150,7 +172,7 @@ void FontSelector::setEncoding(QString encoding)
 {
     if (m_encoding == encoding)
         return;
-    
+
     m_encoding = encoding;
     calculateBoundingBox();
     emit encodingChanged();
