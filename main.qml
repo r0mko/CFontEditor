@@ -3,11 +3,11 @@ import QtQuick.Window 2.2
 import QtQuick.Controls 2.3
 import QtQuick.Layouts 1.3
 import FontEditor 1.0
-import QtQuick.Controls.Material 2.3
+import QtGraphicalEffects 1.0
 ApplicationWindow {
     visible: true
     width: 1200
-    height: 800
+    height: 960
     title: qsTr("CFont editor")
     
     FontSelector {
@@ -36,7 +36,7 @@ ApplicationWindow {
             
             ToolButton {
                 id: _bold
-                text: "B"
+                text: "Bold"
                 checkable: true
             }
             
@@ -53,13 +53,13 @@ ApplicationWindow {
                 }
             }
             Label {
-                text: "Point size:"
+                text: "Pixel size:"
             }
             
             SpinBox {
                 id: _sizeSpinner
                 Component.onCompleted: {
-                    value = 12;
+                    value = 20;
                 }
             }
         }
@@ -68,51 +68,83 @@ ApplicationWindow {
     RowLayout {
         anchors.fill: parent
         
-        GridView {
+        //        ColumnLayout {
+        //            id: zoomView
+        //            Layout.minimumWidth: glyphGrid.currentItem.glyph.width * 10
+        //            Glyph {
+        //                Layout.minimumWidth: glyphGrid.currentItem.glyph.width * 10
+        //                Layout.minimumHeight: glyphGrid.currentItem.glyph.height * 10
+        //                charCode: glyphGrid.currentItem.glyph.charCode
+        //            }
+        //        }
+        
+        GridLayout {
             id: glyphGrid
             Layout.fillWidth: true
             Layout.fillHeight: true
             Layout.minimumWidth: 600
-            model: 255
-            cellHeight: Math.max(_selector.fontHeight + 12, 40)
-            cellWidth: Math.max(_selector.fontWidth + 12, 40)
+            columnSpacing: 2
+            rowSpacing: 2
+            columns: 16
+            rows: 16
             
-            delegate: Item {
-                width: glyphGrid.cellWidth  
-                height: glyphGrid.cellHeight
-                property bool isCurrent: GridView.isCurrentItem
-                Rectangle {
-                    width: glyphGrid.cellWidth - 8
-                    height: glyphGrid.cellHeight - 8
-                    anchors.centerIn: parent
-                    color: index >= 32 ? "#fff" : "#888"
+            Repeater {
+                model: 255 - 32
+                delegate: Rectangle {
+                    implicitHeight: Math.max(_selector.fontHeight + 22, 60)
+                    implicitWidth: Math.max(_selector.fontWidth + 8, 40)
+                    
+                    property bool isCurrent: GridView.isCurrentItem
+                    property alias glyph: _glyph
+                    color: "#ddd"
                     border.width: isCurrent ? 4 : 1
                     border.color: isCurrent ? "#0FF" : "#000"
-                    Glyph {
+                    
+                    
+                    Text {
+                        id: _heading
+                        text: _glyph.glyph + " (" + _glyph.charCode + ")"
+                        width: parent.width
+                        horizontalAlignment: Qt.AlignHCenter
+                        font.pointSize: 10
+                    }
+                    
+                    Rectangle {
+                        width: _selector.fontWidth + 4
+                        height: _selector.fontHeight + 4
+                        border.color: "#0f0"
+                        border.width: 1
                         anchors.centerIn: parent
-                        charCode: index
-                        color: "#000"
-                        fontSelector: _selector
+                        anchors.verticalCenterOffset: _heading.paintedHeight / 2
+                        color: _glyph.backgroundColor
+                        Glyph {
+                            id: _glyph
+                            //                                anchors.centerIn: parent
+                            anchors.centerIn: parent
+                            charCode: index + 32
+                            fontSelector: _selector
+                            color: "#fff"
+                            backgroundColor: "#333"
+                        }
                     }
+                    
+                    //                    MouseArea {
+                    //                        anchors.fill: parent
+                    //                        enabled: true
+                    //                        onClicked: {
+                    //                            console.log("Clicked", glyphGrid.currentIndex, index)   
+                    //                            glyphGrid.currentIndex = index
+                    //                        }
+                    //                    }
                 }
-                MouseArea {
-                    anchors.fill: parent
-                    enabled: true
-                    onClicked: {
-                        console.log("Clicked", glyphGrid.currentIndex, index)   
-                        glyphGrid.currentIndex = index
-                    }
-                }
+                
             }
+            
+            
+            
+            
         }
         
-        ColumnLayout {
-            Layout.minimumWidth: 380
-            Layout.fillWidth: false
-        }
+        
     }
-    
-    
-    
-    
 }

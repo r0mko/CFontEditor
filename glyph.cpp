@@ -5,10 +5,24 @@
 #include <QPainter>
 #include <QTextCodec>
 
+
+
 Glyph::Glyph(QQuickItem *parent)
-    : QQuickPaintedItem (parent)
+    : QQuickPaintedItem(parent)
 {
-    setFlag(QQuickItem::ItemHasContents);
+    m_color = QColor(Qt::black);
+    m_backgroundColor = QColor(Qt::transparent);
+}
+
+Glyph::~Glyph()
+{
+}
+
+void Glyph::componentComplete()
+{
+    QQuickPaintedItem::componentComplete();
+    if (m_fontSelector)
+        update();
 }
 
 FontSelector *Glyph::fontSelector() const
@@ -40,8 +54,10 @@ int Glyph::charCode() const
 
 void Glyph::setCharCode(int charCode)
 {
-    if (m_charCode == charCode || charCode < 32)
+    if (m_charCode == charCode || charCode < 32) {
         return;
+    }
+    setFlag(QQuickItem::ItemHasContents);
     m_charCode = charCode;
     emit charCodeChanged();
     fix();
@@ -50,7 +66,7 @@ void Glyph::setCharCode(int charCode)
 
 void Glyph::paint(QPainter *painter)
 {
-    painter->drawImage(0, 0, m_image);
+    painter->drawImage(QPoint(), m_image);
 }
 
 QColor Glyph::color() const
@@ -68,6 +84,40 @@ void Glyph::setColor(QColor color)
     update();
 }
 
+QSize Glyph::size() const
+{
+    return m_size;
+}
+
+QString Glyph::glyph() const
+{
+    return m_glyph;
+}
+
+const QImage &Glyph::image() const
+{
+    return m_image;
+}
+
+QImage &Glyph::image()
+{
+    return m_image;
+}
+
+QColor Glyph::backgroundColor() const
+{
+    return m_backgroundColor;
+}
+
+void Glyph::setBackgroundColor(QColor backgroundColor)
+{
+    if (m_backgroundColor == backgroundColor)
+        return;
+    
+    m_backgroundColor = backgroundColor;
+    emit backgroundColorChanged();
+}
+
 void Glyph::fix()
 {
     if (!m_fontSelector) {
@@ -81,25 +131,30 @@ void Glyph::fix()
         qWarning() << "Unknown encoding" + m_fontSelector->encoding();
         return;
     }
-    m_glyph = codec->toUnicode(arr);
-    QRect size = metrics.boundingRect(m_glyph);
-    m_baseline = -size.top();
-    int width = metrics.width(m_glyph) + metrics.leftBearing(m_glyph[0]) + metrics.rightBearing(m_glyph[0]);
+    QString glyph = codec->toUnicode(arr);
+    if (m_glyph != glyph) {
+        m_glyph = glyph;
+        emit glyphChanged();
+    }
+    QRect rect = metrics.boundingRect(m_glyph);
+    m_baseline = -rect.top();
+    int width = rect.width(); //metrics.width(m_glyph) + metrics.leftBearing(m_glyph[0]) + metrics.rightBearing(m_glyph[0]);
     setImplicitWidth(width);
     setImplicitHeight(metrics.height());
-    setWidth(width);
-    setHeight(metrics.height());
-    if (width <= 0 || size.height() <= 0)
+//    setWidth(width);
+//    setHeight(metrics.height());
+    if (width <= 0 || rect.height() <= 0)
         return;
-    QImage img(QSize(width, metrics.height()), QImage::Format_Grayscale8);
-    img.fill(0xff);
+    QSize size(width, metrics.height());
+    QImage img(size, QImage::Format_ARGB32_Premultiplied);
+    if (size != m_size) {
+        m_size = size;
+        emit sizeChanged();
+    }
+    img.fill(m_backgroundColor);
     QPainter painter(&img);
     
-    QPen pen;
-    pen.setColor(m_color);
-    painter.setPen(pen);
-    painter.setRenderHint(QPainter::Antialiasing, false);
-    painter.setRenderHint(QPainter::TextAntialiasing, false);
+    painter.setPen(m_color);
     painter.setFont(m_fontSelector->currentFont());
     painter.drawText(0, m_baseline, m_glyph);
     m_image = img;

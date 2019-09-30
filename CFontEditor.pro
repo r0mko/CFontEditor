@@ -15,7 +15,8 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += \
     main.cpp \
     glyph.cpp \
-    fontselector.cpp
+    fontselector.cpp \
+    imagemodel.cpp
 
 RESOURCES += qml.qrc
 
@@ -32,4 +33,5 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 
 HEADERS += \
     glyph.h \
-    fontselector.h
+    fontselector.h \
+    imagemodel.h

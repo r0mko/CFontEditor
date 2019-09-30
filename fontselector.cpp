@@ -3,9 +3,14 @@
 #include <QDebug>
 #include <QFontMetrics>
 
+QRect FontSelector::fontRect() const
+{
+    return m_fontRect;
+}
+
 FontSelector::FontSelector(QObject *parent) : QObject(parent)
 {
-
+    
 }
 
 QStringList FontSelector::fonts() const
@@ -32,10 +37,11 @@ void FontSelector::setFontIndex(int fontIndex)
     if (m_fontIndex >=0 && m_fontIndex < fonts().size()) {
         m_currentFont = QFont(fonts()[m_fontIndex], m_pointSize);
         m_currentFont.setBold(m_bold);
-        m_currentFont.setStyleStrategy(QFont::NoAntialias);
+//        m_currentFont.setStyleStrategy(QFont::NoAntialias);
         qDebug() << "Set current font" << m_currentFont.family() << "size:" << m_pointSize;
     }
     
+    calculateBoundingBox();
     emit currentFontChanged();
     emit fontIndexChanged();
     emit pointSizeChanged();
@@ -53,6 +59,7 @@ void FontSelector::setWritingSystem(WritingSystem writingSystem)
     
     m_writingSystem = writingSystem;
     m_fontIndex = 0;
+    calculateBoundingBox();
     emit fontIndexChanged();
     emit fontsChanged();
     emit writingSystemChanged();
@@ -69,6 +76,7 @@ void FontSelector::setPointSize(int pointSize)
         return;
     m_currentFont.setPointSize(pointSize);
     m_pointSize = pointSize;
+    calculateBoundingBox();
     emit pointSizeChanged();
 }
 
@@ -92,12 +100,12 @@ QString FontSelector::encoding() const
 
 int FontSelector::fontHeight() const
 {
-    return QFontMetrics(m_currentFont).height();
+    return m_fontRect.height();
 }
 
 int FontSelector::fontWidth() const
 {
-    return QFontMetrics(m_currentFont).maxWidth();
+    return m_fontRect.width();
 }
 
 bool FontSelector::bold() const
@@ -116,11 +124,34 @@ void FontSelector::setBold(bool bold)
     emit boldChanged();
 }
 
+void FontSelector::calculateBoundingBox() 
+{
+    m_fontRect = QRect();
+    if (m_encoding.isEmpty()) {
+        return;
+    }
+    QTextCodec *codec = QTextCodec::codecForName(m_encoding.toLatin1());
+    if (!codec) {
+        qWarning() << "Unknown encoding" << m_encoding;
+        return;
+    }
+    QFontMetrics metrics(m_currentFont);
+    for (uint8_t c = 32; c < 255; ++c) {
+        QByteArray ba;
+        ba.append(static_cast<char>(c));
+        QString glyph = codec->toUnicode(ba);
+        m_fontRect = m_fontRect.united(metrics.boundingRect(glyph));
+    }
+    emit fontRectChanged();
+    qDebug() << "Font rect for" << m_currentFont.family() << "is" << m_fontRect;
+}
+
 void FontSelector::setEncoding(QString encoding)
 {
     if (m_encoding == encoding)
         return;
     
     m_encoding = encoding;
+    calculateBoundingBox();
     emit encodingChanged();
 }

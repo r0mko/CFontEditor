@@ -4,6 +4,8 @@
 #include <QFont>
 #include <QObject>
 #include <QFontDatabase>
+#include <QQmlParserStatus>
+#include <QRect>
 
 class FontSelector : public QObject
 {
@@ -27,8 +29,8 @@ private:
     Q_PROPERTY(int fontIndex READ fontIndex WRITE setFontIndex NOTIFY fontIndexChanged)
     Q_PROPERTY(int pointSize READ pointSize WRITE setPointSize NOTIFY pointSizeChanged)
     Q_PROPERTY(WritingSystem writingSystem READ writingSystem WRITE setWritingSystem NOTIFY writingSystemChanged)
-    Q_PROPERTY(int fontHeight READ fontHeight NOTIFY pointSizeChanged)
-    Q_PROPERTY(int fontWidth READ fontWidth NOTIFY pointSizeChanged)
+    Q_PROPERTY(int fontHeight READ fontHeight NOTIFY fontRectChanged)
+    Q_PROPERTY(int fontWidth READ fontWidth NOTIFY fontRectChanged)
     
     QFont m_currentFont;
     QFontDatabase m_database;
@@ -37,6 +39,7 @@ private:
     QString m_encoding;
     int m_pointSize = 12;
     bool m_bold;
+    QRect m_fontRect;
     
 public:
     explicit FontSelector(QObject *parent = nullptr);
@@ -55,12 +58,15 @@ public:
     
     QStringList encodings() const;
     QString encoding() const;
+    void setEncoding(QString encoding);
     
     int fontHeight() const;
     int fontWidth() const;
     
     bool bold() const;
     void setBold(bool bold);
+    
+    QRect fontRect() const;
     
 signals:
     void currentFontChanged();
@@ -71,9 +77,13 @@ signals:
     void encodingChanged();
     
     void boldChanged();
-
+    void fontRectChanged();
+    
 public slots:
-void setEncoding(QString encoding);
+private:
+    void calculateBoundingBox();
+    
+    
 };
 
 #endif // FONTSELECTOR_H
