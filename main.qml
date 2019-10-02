@@ -69,6 +69,13 @@ ApplicationWindow {
                     value = 20;
                 }
             }
+            
+            ToolButton {
+                id: _renderAsText
+                checkable: true
+                text: "Render as text"
+            }
+            
         }
     }
 
@@ -131,8 +138,8 @@ ApplicationWindow {
                             anchors.centerIn: parent
                             charCode: index + 32
                             fontSelector: _selector
-                            color: "#fff"
-                            backgroundColor: "#333"
+                            color: "#008"
+                            backgroundColor: "#fff"
                         }
                     }
 

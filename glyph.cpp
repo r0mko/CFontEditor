@@ -33,14 +33,14 @@ FontSelector *Glyph::fontSelector() const
 
 void Glyph::setFontSelector(FontSelector *fontSelector)
 {
-
+    
     if (m_fontSelector == fontSelector)
         return;
-
+    
     if (m_fontSelector) {
         disconnect(m_fontSelector, nullptr, this, nullptr);
     }
-
+    
     m_fontSelector = fontSelector;
     connect(m_fontSelector, &FontSelector::pointSizeChanged, this, &Glyph::fix);
     connect(m_fontSelector, &FontSelector::currentFontChanged, this, &Glyph::fix);
@@ -79,7 +79,7 @@ void Glyph::setColor(QColor color)
 {
     if (m_color == color)
         return;
-
+    
     m_color = color;
     emit colorChanged();
     update();
@@ -114,9 +114,24 @@ void Glyph::setBackgroundColor(QColor backgroundColor)
 {
     if (m_backgroundColor == backgroundColor)
         return;
-
+    
     m_backgroundColor = backgroundColor;
     emit backgroundColorChanged();
+}
+
+bool Glyph::renderAsText() const
+{
+    return m_renderAsText;
+}
+
+void Glyph::setRenderAsText(bool renderAsText)
+{
+    if (m_renderAsText == renderAsText)
+        return;
+    
+    m_renderAsText = renderAsText;
+    emit renderAsTextChanged();
+    fix();
 }
 
 void Glyph::fix()
@@ -152,13 +167,17 @@ void Glyph::fix()
     }
     img.fill(m_backgroundColor);
     QPainter painter(&img);
-    qDebug() << "Font style strategy" << m_fontSelector->currentFont().styleStrategy();
-    QRawFont rf = QRawFont::fromFont(m_fontSelector->currentFont());
-    auto glyphs = rf.glyphIndexesForString(m_glyph);
-    QPainterPath p = rf.pathForGlyph(glyphs.first());
-    painter.setRenderHints(QPainter::Antialiasing | QPainter::HighQualityAntialiasing, m_fontSelector->antialiased());
-    painter.translate(0, m_baseline);
-    painter.fillPath(p, QBrush(m_color));
+    if (m_renderAsText) {
+        painter.setPen(m_color);
+        painter.drawText(0, m_baseline, m_glyph);
+    } else {
+        QRawFont rf = QRawFont::fromFont(m_fontSelector->currentFont());
+        auto glyphs = rf.glyphIndexesForString(m_glyph);
+        QPainterPath p = rf.pathForGlyph(glyphs.first());
+        painter.setRenderHints(QPainter::Antialiasing | QPainter::HighQualityAntialiasing, m_fontSelector->antialiased());
+        painter.translate(0, m_baseline);
+        painter.fillPath(p, QBrush(m_color));
+    }
     m_image = img;
     update();
 }

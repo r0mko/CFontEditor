@@ -15,6 +15,7 @@ class Glyph : public QQuickPaintedItem
     Q_PROPERTY(QColor backgroundColor READ backgroundColor WRITE setBackgroundColor NOTIFY backgroundColorChanged)
     Q_PROPERTY(QSize size READ size NOTIFY sizeChanged)
     Q_PROPERTY(QString glyph READ glyph NOTIFY glyphChanged)
+    Q_PROPERTY(bool renderAsText READ renderAsText WRITE setRenderAsText NOTIFY renderAsTextChanged)
     
     FontSelector *m_fontSelector = nullptr;
     int m_charCode = 0;
@@ -24,7 +25,8 @@ class Glyph : public QQuickPaintedItem
     QImage m_image;
     QSize m_size;
     QColor m_backgroundColor;
-    
+    bool m_renderAsText = false;
+
 public:
     explicit Glyph(QQuickItem *parent = nullptr);
     ~Glyph() override;
@@ -54,9 +56,12 @@ public:
     QColor backgroundColor() const;
     void setBackgroundColor(QColor backgroundColor);
     
+    bool renderAsText() const;
+    void setRenderAsText(bool renderAsText);
     
 public slots:
     void fix();
+    
 signals:
     void fontSelectorChanged();
     void charCodeChanged();
@@ -64,6 +69,7 @@ signals:
     void sizeChanged();
     void glyphChanged();
     void backgroundColorChanged();
+    void renderAsTextChanged();
 };
 
 #endif // GLYPH_H
