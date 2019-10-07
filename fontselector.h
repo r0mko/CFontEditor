@@ -17,12 +17,14 @@ public:
         Symbol = QFontDatabase::Symbol
     };
     Q_ENUM(WritingSystem)
+    
+    
 private:
     Q_OBJECT
     Q_PROPERTY(QStringList fonts READ fonts NOTIFY fontsChanged)
     Q_PROPERTY(QStringList encodings READ encodings CONSTANT)
-    Q_PROPERTY(bool bold READ bold WRITE setBold NOTIFY boldChanged)
 
+    Q_PROPERTY(QFont::Weight weight READ weight WRITE setWeight NOTIFY weightChanged)
     Q_PROPERTY(QString encoding READ encoding WRITE setEncoding NOTIFY encodingChanged)
 
     Q_PROPERTY(QFont currentFont READ currentFont NOTIFY currentFontChanged)
@@ -32,8 +34,6 @@ private:
     Q_PROPERTY(int fontHeight READ fontHeight NOTIFY fontRectChanged)
     Q_PROPERTY(int fontWidth READ fontWidth NOTIFY fontRectChanged)
     Q_PROPERTY(bool antialiased READ antialiased WRITE setAntialiased NOTIFY antialiasedChanged)
-
-
 
 
 public:
@@ -58,14 +58,14 @@ public:
     int fontHeight() const;
     int fontWidth() const;
 
-    bool bold() const;
-    void setBold(bool bold);
-
     QRect fontRect() const;
 
     bool antialiased() const;
     void setAntialiased(bool antialiased);
-
+    
+    QFont::Weight weight() const;
+    void setWeight(QFont::Weight weight);
+    
 signals:
     void currentFontChanged();
     void fontIndexChanged();
@@ -73,13 +73,12 @@ signals:
     void fontsChanged();
     void pointSizeChanged();
     void encodingChanged();
-
-    void boldChanged();
     void fontRectChanged();
-
     void antialiasedChanged();
-
+    void weightChanged();
+    
 public slots:
+
 
 private:
     void calculateBoundingBox();
@@ -90,7 +89,6 @@ private:
     WritingSystem m_writingSystem = Latin;
     QString m_encoding;
     int m_pointSize = 12;
-    bool m_bold = false;
     QRect m_fontRect;
     bool m_antialiased = false;
 };

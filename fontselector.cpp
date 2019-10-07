@@ -28,9 +28,23 @@ void FontSelector::setAntialiased(bool antialiased)
     emit currentFontChanged();
 }
 
+QFont::Weight FontSelector::weight() const
+{
+    return static_cast<QFont::Weight>(m_currentFont.weight());
+}
+
+void FontSelector::setWeight(QFont::Weight weight)
+{
+    if (m_currentFont.weight() == weight)
+        return;
+    
+    m_currentFont.setWeight(weight);
+    emit weightChanged();
+}
+
 FontSelector::FontSelector(QObject *parent) : QObject(parent)
 {
-
+    
 }
 
 QStringList FontSelector::fonts() const
@@ -55,8 +69,9 @@ void FontSelector::setFontIndex(int fontIndex)
 
     m_fontIndex = fontIndex;
     if (m_fontIndex >=0 && m_fontIndex < fonts().size()) {
+        auto wt = m_currentFont.weight();
         m_currentFont = QFont(fonts()[m_fontIndex], m_pointSize);
-        m_currentFont.setBold(m_bold);
+        m_currentFont.setWeight(wt);
         if (!m_antialiased) {
             m_currentFont.setStyleStrategy(QFont::NoAntialias);
         }
@@ -128,22 +143,6 @@ int FontSelector::fontHeight() const
 int FontSelector::fontWidth() const
 {
     return m_fontRect.width();
-}
-
-bool FontSelector::bold() const
-{
-    return m_bold;
-}
-
-void FontSelector::setBold(bool bold)
-{
-    if (m_bold == bold)
-        return;
-
-    m_currentFont.setBold(bold);
-    emit currentFontChanged();
-    m_bold = bold;
-    emit boldChanged();
 }
 
 void FontSelector::calculateBoundingBox()
