@@ -42,6 +42,11 @@ void FontSelector::setWeight(QFont::Weight weight)
     emit weightChanged();
 }
 
+QSize FontSelector::fontSize() const
+{
+    return m_fontRect.size();
+}
+
 FontSelector::FontSelector(QObject *parent) : QObject(parent)
 {
     
@@ -164,6 +169,7 @@ void FontSelector::calculateBoundingBox()
         m_fontRect = m_fontRect.united(metrics.boundingRect(glyph));
     }
     emit fontRectChanged();
+    emit fontSizeChanged();
     qDebug() << "Font rect for" << m_currentFont.family() << "is" << m_fontRect;
 }
 

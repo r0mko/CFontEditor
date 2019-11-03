@@ -34,7 +34,7 @@ private:
     Q_PROPERTY(int fontHeight READ fontHeight NOTIFY fontRectChanged)
     Q_PROPERTY(int fontWidth READ fontWidth NOTIFY fontRectChanged)
     Q_PROPERTY(bool antialiased READ antialiased WRITE setAntialiased NOTIFY antialiasedChanged)
-
+    Q_PROPERTY(QSize fontSize READ fontSize NOTIFY fontSizeChanged)
 
 public:
     explicit FontSelector(QObject *parent = nullptr);
@@ -59,12 +59,14 @@ public:
     int fontWidth() const;
 
     QRect fontRect() const;
-
+    QSize fontSize() const;
+    
     bool antialiased() const;
     void setAntialiased(bool antialiased);
     
     QFont::Weight weight() const;
     void setWeight(QFont::Weight weight);
+    
     
 signals:
     void currentFontChanged();
@@ -76,7 +78,8 @@ signals:
     void fontRectChanged();
     void antialiasedChanged();
     void weightChanged();
-    
+    void fontSizeChanged();
+
 public slots:
 
 

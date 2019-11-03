@@ -12,9 +12,9 @@ FontModel::FontModel(QObject *parent)
     
 }
 
-int FontModel::rowCount(const QModelIndex &parent) const
+int FontModel::rowCount(const QModelIndex &) const
 {
-    return 256;
+    return m_images.size();
 }
 
 QVariant FontModel::data(const QModelIndex &index, int role) const
@@ -41,6 +41,9 @@ QVariant FontModel::data(const QModelIndex &index, int role) const
     case HeightRole:
         return img.height();
         break;
+    case IsNullRole:
+        return img.isNull();
+        break;
     default:
         break;
     }
@@ -53,14 +56,21 @@ QHash<int, QByteArray> FontModel::roleNames() const
         { ImageRole, "image" },
         { MaskRole, "mask" },
         { WidthRole, "glyphWidth"},
-        { HeightRole, "glyphHeight"}
+        { HeightRole, "glyphHeight"},
+        { IsNullRole, "isNullImage"},
     };
 }
 
+bool FontModel::isEmpty() const
+{
+    return m_isEmpty;
+}   
+
 void FontModel::initFromFont(QFont font, const QString &encoding, bool antialiasing, bool renderAsPath)
 {
+    beginResetModel();
     QFontMetrics metrics(font);
-    m_images.clear();
+    clearHelper();
     m_images.resize(256);
     for (int ch = 32; ch < 256; ++ch) {
         QByteArray arr;
@@ -68,6 +78,7 @@ void FontModel::initFromFont(QFont font, const QString &encoding, bool antialias
         QTextCodec *codec = QTextCodec::codecForName(encoding.toLatin1());
         if (!codec) {
             qWarning() << "Unknown encoding" + encoding;
+            endResetModel();
             return;
         }
         QString glyph = codec->toUnicode(arr);
@@ -91,6 +102,9 @@ void FontModel::initFromFont(QFont font, const QString &encoding, bool antialias
         }
         m_images[ch] = img;
     }
+    m_isEmpty = false;
+    emit isEmptyChanged();
+    endResetModel();
 }
 
 void FontModel::createMasks()
@@ -114,4 +128,21 @@ void FontModel::createMasks()
         painter.drawImage(1, 1, img);
         m_masks[i] = mask;
     }
+}
+
+void FontModel::clear()
+{
+    if (m_isEmpty)
+        return;
+    beginResetModel();
+    clearHelper();
+    m_isEmpty = true;
+    emit isEmptyChanged();
+    endResetModel();
+}
+
+void FontModel::clearHelper()
+{
+    m_masks.clear();
+    m_images.clear();
 }

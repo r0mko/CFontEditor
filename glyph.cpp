@@ -151,18 +151,23 @@ void Glyph::fix()
     QString glyph = codec->toUnicode(arr);
     QRawFont rf = QRawFont::fromFont(m_fontSelector->currentFont());
     auto glyphs = rf.glyphIndexesForString(glyph);
-    QPainterPath p = rf.pathForGlyph(glyphs.first());
+    if (glyphs.isEmpty()) {
+        m_image = QImage();
+        update();
+        return;
+    }
     
     if (m_glyph != glyph) {
         m_glyph = glyph;
         emit glyphChanged();
     }
     QRect rect = metrics.boundingRect(m_glyph);
+    qDebug() << "Rect" << rect << "metric width for char" << m_glyph[0] << metrics.charWidth(m_glyph, 0) << metrics.ascent() << metrics.descent();
     m_baseline = -rect.top();
-    int width = rect.width() + 1;
+    int width = metrics.charWidth(m_glyph, 0);
     setImplicitWidth(width);
     setImplicitHeight(metrics.height());
-    if (width <= 0 || rect.height() <= 0)
+    if (width <= 0)
         return;
     QSize size(width, metrics.height());
     QImage img(size, QImage::Format_ARGB32);
@@ -177,6 +182,7 @@ void Glyph::fix()
         painter.setFont(m_fontSelector->currentFont());
         painter.drawText(0, m_baseline, m_glyph);
     } else {
+        QPainterPath p = rf.pathForGlyph(glyphs.first());
         painter.setRenderHints(QPainter::Antialiasing | QPainter::HighQualityAntialiasing, m_fontSelector->antialiased());
         painter.translate(0, m_baseline);
         painter.fillPath(p, QBrush(m_color));
